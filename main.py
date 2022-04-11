@@ -28,11 +28,11 @@ def checkState(host, port):
     try:
         desc_request = requests.get(desc_url)
         if desc_request.status_code != 200:
-            logger.error("NYM node {}:{} seems to be offline".format(host))
+            logger.error("NYM node {}:{} seems to be offline".format(host, port))
         else:
             logger.debug("NYM node online!")
     except Exception as err:
-        logger.error("NYM node {}:{} seems to be offline".format(host))
+        logger.error("NYM node {}:{} seems to be offline".format(host, port))
 
 
 def worker(host, sleep_time):
