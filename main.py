@@ -35,9 +35,9 @@ def checkState(host, port):
         logger.error("NYM node {}:{} seems to be offline".format(host, port))
 
 
-def worker(host, sleep_time):
+def worker(sleep_time):
     while True:
-        checkState(host)
+        checkState(NYM_HOST, NYM_DESC_PORT)
         time.sleep(sleep_time)
 
 
@@ -45,6 +45,6 @@ if __name__ == "__main__":
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    logger.info("Monitoring NYM node at {} now!".format(NYM_HOST))
-    t = Thread(target=worker, args=(NYM_HOST, NYM_DESC_PORT, 60, ))
+    logger.info("Monitoring NYM node at {}:{} now!".format(NYM_HOST, NYM_DESC_PORT))
+    t = Thread(target=worker, args=(60, ))
     t.start()
