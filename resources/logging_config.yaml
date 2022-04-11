@@ -22,7 +22,7 @@ handlers:
     stream: ext://sys.stdout
   file:
     class: logging.handlers.TimedRotatingFileHandler
-    filename: logs/nym-mon.log
+    filename: nym-mon.log
     when: d
     interval: 1
     backupCount: 5
