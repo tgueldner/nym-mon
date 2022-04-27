@@ -7,7 +7,7 @@ from threading import Thread
 import requests
 import yaml
 from keys.telegram import TELEGRAM_CHAT_ID, TELEGRAM_TOKEN
-from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_URL
+from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API
 
 logging_yaml_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "resources", "logging_config.yaml")
@@ -56,7 +56,7 @@ def getIdentityKey(host, port):
 
 
 def checkDelegation(id):
-    url = NYM_EXPLORER_URL+"/{}".format(id)
+    url = NYM_EXPLORER_API+"/mix-node/{}".format(id)
     try:
         request = requests.get(url)
         if request.status_code == 200:
