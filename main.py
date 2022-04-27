@@ -70,7 +70,7 @@ def checkDelegationWorker(sleep_time):
     stake = 0
     id = getIdentityKey(NYM_HOST, NYM_DESC_PORT)
     while True:
-        newStake = checkStake(id)
+        newStake = checkDelegation(id)
         if newStake != stake:
             stake = newStake
             logger.info("mixnode stake: {}".format(stake))
