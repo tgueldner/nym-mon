@@ -7,7 +7,7 @@ from threading import Thread
 import requests
 import yaml
 from keys.telegram import TELEGRAM_CHAT_ID, TELEGRAM_TOKEN
-from keys.nym import NYM_HOST, NYM_DESC_PORT
+from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_URL
 
 logging_yaml_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "resources", "logging_config.yaml")
@@ -56,7 +56,7 @@ def getIdentityKey(host, port):
 
 
 def checkDelegation(id):
-    url = "https://explorer.nymtech.net/api/v1/mix-node/{}".format(id)
+    url = NYM_EXPLORER_URL+"/{}".format(id)
     try:
         request = requests.get(url)
         if request.status_code == 200:
@@ -66,14 +66,13 @@ def checkDelegation(id):
         logger.error("Explorer Api seems to be offline")
 
 
-def checkDelegationWorker(sleep_time):
+def checkDelegationWorker(sleep_time, id):
     stake = 0
-    id = getIdentityKey(NYM_HOST, NYM_DESC_PORT)
     while True:
         newStake = checkDelegation(id)
         if newStake != stake:
             stake = newStake
-            logger.info("mixnode stake: {}".format(stake))
+            logger.info("new stake for mixnode {}: {}".format(id, stake))
         time.sleep(sleep_time)
 
 
@@ -81,6 +80,8 @@ if __name__ == "__main__":
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    logger.info("Monitoring NYM node at {}:{}!".format(NYM_HOST, NYM_DESC_PORT))
+    id = getIdentityKey(NYM_HOST, NYM_DESC_PORT)
+
+    logger.info("Monitoring NYM node at {}:{} ({})!".format(NYM_HOST, NYM_DESC_PORT, id))
     Thread(target=worker, args=(60, )).start()
-    Thread(target=checkDelegationWorker, args=(60 * 60, )).start()
+    Thread(target=checkDelegationWorker, args=(60 * 60, id, )).start()
