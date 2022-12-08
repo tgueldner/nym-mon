@@ -7,7 +7,7 @@ from threading import Thread
 import requests
 import yaml
 from keys.telegram import TELEGRAM_CHAT_ID, TELEGRAM_TOKEN
-from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API, NYM_IDENTITY
+from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API
 
 logging_yaml_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "resources", "logging_config.yaml")
@@ -41,8 +41,8 @@ def worker(sleep_time):
         time.sleep(sleep_time)
 
 
-def checkDelegation(id):
-    url = NYM_EXPLORER_API+"/mix-node/{}".format(id)
+def checkDelegation(mix_id):
+    url = NYM_EXPLORER_API+"/mix-node/{}".format(mix_id)
     try:
         request = requests.get(url)
         if request.status_code == 200:
@@ -52,20 +52,35 @@ def checkDelegation(id):
         logger.error("Explorer Api seems to be offline")
 
 
-def checkDelegationWorker(sleep_time, id):
+def checkDelegationWorker(sleep_time, mix_id):
     stake = 0
     while True:
-        newStake = checkDelegation(id)
+        newStake = checkDelegation(mix_id)
         if newStake != stake:
             stake = newStake
-            logger.info("new stake for mixnode {}: {}".format(id, stake))
+            logger.info("new stake for mixnode {}: {}".format(mix_id, stake))
         time.sleep(sleep_time)
 
+
+def getMixnodes():
+    url = NYM_EXPLORER_API+"/mix-nodes"
+    try:
+        request = requests.get(url)
+        if request.status_code == 200:
+            data = request.json()
+            return {node["mix_node"]["host"]:node for node in data}
+    except Exception as err:
+        logger.error("Explorer Api seems to be offline", err)
 
 if __name__ == "__main__":
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    logger.info("Monitoring NYM node at {}:{} ({})!".format(NYM_HOST, NYM_DESC_PORT, NYM_IDENTITY))
+    mixnodes = getMixnodes()
+    mynode = mixnodes[NYM_HOST]
+    mix_id = mynode["mix_id"]
+    identity = mynode["mix_node"]["identity_key"]
+
+    logger.info("Monitoring NYM node at {}:{} ({}:{})!".format(NYM_HOST, NYM_DESC_PORT, mix_id, identity))
     Thread(target=worker, args=(60, )).start()
-    Thread(target=checkDelegationWorker, args=(60 * 60, id, )).start()
+    Thread(target=checkDelegationWorker, args=(60 * 60, mix_id, )).start()
