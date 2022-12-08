@@ -7,7 +7,7 @@ from threading import Thread
 import requests
 import yaml
 from keys.telegram import TELEGRAM_CHAT_ID, TELEGRAM_TOKEN
-from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API
+from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API, NYM_IDENTITY
 
 logging_yaml_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "resources", "logging_config.yaml")
@@ -41,20 +41,6 @@ def worker(sleep_time):
         time.sleep(sleep_time)
 
 
-def getIdentityKey(host, port):
-    url = "http://{}:{}/verloc".format(host, port)
-    try:
-        request = requests.get(url)
-        if request.status_code != 200:
-            logger.error("NYM node {}:{} seems to be offline".format(host, port))
-            return
-        else:
-            data = request.json()
-            return data["results"][0]["identity"]
-    except Exception as err:
-        logger.error("NYM node {}:{} seems to be offline".format(host, port))
-
-
 def checkDelegation(id):
     url = NYM_EXPLORER_API+"/mix-node/{}".format(id)
     try:
@@ -80,8 +66,6 @@ if __name__ == "__main__":
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    id = getIdentityKey(NYM_HOST, NYM_DESC_PORT)
-
-    logger.info("Monitoring NYM node at {}:{} ({})!".format(NYM_HOST, NYM_DESC_PORT, id))
+    logger.info("Monitoring NYM node at {}:{} ({})!".format(NYM_HOST, NYM_DESC_PORT, NYM_IDENTITY))
     Thread(target=worker, args=(60, )).start()
     Thread(target=checkDelegationWorker, args=(60 * 60, id, )).start()

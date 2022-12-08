@@ -1,3 +1,4 @@
-NYM_HOST = "85.214.53.27"
+NYM_HOST = "1.1.1.1"
 NYM_PORT = "8000"
 NYM_EXPLORER_API = "https://explorer.nymtech.net/api/v1"
+NYM_IDENTITY = "abc"
