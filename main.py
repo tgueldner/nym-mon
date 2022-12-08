@@ -7,7 +7,7 @@ from threading import Thread
 import requests
 import yaml
 from keys.telegram import TELEGRAM_CHAT_ID, TELEGRAM_TOKEN
-from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API
+from keys.nym import NYM_HOST, NYM_DESC_PORT, NYM_EXPLORER_API, NYM_MIXNET_GURU_API
 
 logging_yaml_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "resources", "logging_config.yaml")
@@ -68,9 +68,29 @@ def getMixnodes():
         request = requests.get(url)
         if request.status_code == 200:
             data = request.json()
-            return {node["mix_node"]["host"]:node for node in data}
+            return {node["mix_node"]["host"]: node for node in data}
     except Exception as err:
-        logger.error("Explorer Api seems to be offline", err)
+        logger.error("Explorer Api seems to be offline")
+
+
+def checkVersion(identity):
+    url = NYM_MIXNET_GURU_API + "/mixnodes/{}".format(identity)
+    try:
+        request = requests.get(url)
+        if request.status_code == 200:
+            data = request.json()
+            return data["outdated"]
+    except Exception as err:
+        logger.error("Guru Mixnode Api seems to be offline")
+
+
+def checkVersionWorker(sleep_time, identity):
+    while True:
+        outdated = checkVersion(identity)
+        if outdated:
+            logger.info("mixnode {} is outdated".format(identity))
+        time.sleep(sleep_time)
+
 
 if __name__ == "__main__":
     setup_logging()
@@ -84,3 +104,4 @@ if __name__ == "__main__":
     logger.info("Monitoring NYM node at {}:{} ({}:{})!".format(NYM_HOST, NYM_DESC_PORT, mix_id, identity))
     Thread(target=worker, args=(60, )).start()
     Thread(target=checkDelegationWorker, args=(60 * 60, mix_id, )).start()
+    Thread(target=checkVersionWorker, args=(60 * 60 * 24, identity, )).start()
